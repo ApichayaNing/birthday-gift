@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>🎢 RollerRun — Our Story (Cinematic)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <style>
+    :root { --hud:#0b1020e6; --text:#fff; --accent:#ffd76a; }
+    html,body{height:100%;margin:0;background:#0b1020;}
+    canvas{display:block;width:100vw;height:100vh;image-rendering:pixelated;touch-action:manipulation;}
+
+    .caption{
+      position:fixed;left:12px;top:12px;color:var(--accent);
+      background:var(--hud);border:1px solid #ffffff22;border-radius:12px;
+      padding:10px 12px;font:16px/1.3 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto;
+      max-width:min(92vw,900px);z-index:3;white-space:pre-wrap;
+    }
+    .hud{
+      position:fixed;left:12px;bottom:12px;color:var(--text);
+      background:var(--hud);border:1px solid #ffffff22;border-radius:12px;
+      padding:8px 12px;font:13px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;z-index:3;
+    }
+    .controls{
+      position:fixed;right:12px;bottom:12px;display:flex;gap:8px;flex-wrap:wrap;z-index:3;
+    }
+    button{
+      border:1px solid #ffffff33;background:#ffffff20;color:#fff;font-weight:700;
+      border-radius:999px;padding:12px 16px;cursor:pointer
+    }
+    button:active{transform:translateY(1px)}
+    @media (max-width:520px){
+      .caption{font-size:15px}
+      .hud{font-size:12px}
+      button{padding:10px 14px}
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game" aria-label="Our story (cinematic)"></canvas>
+  <div class="caption" id="caption">Loading…</div>
+  <div class="hud" id="hud">Stage 1 / N • Hearts 0 • Auto 30s • ←/→ or buttons to change</div>
+  <div class="controls">
+    <button id="prevBtn">◀ Prev</button>
+    <button id="nextBtn">Next ▶</button>
+  </div>
+
+  <script>
+    // ---------- canvas ----------
+    const C = document.getElementById("game");
+    const ctx = C.getContext("2d");
+    ctx.imageSmoothingEnabled = false;
+    function fit(){ C.width = Math.max(innerWidth, 640); C.height = Math.max(innerHeight, 360); }
+    addEventListener("resize", fit); fit();
+
+    // ---------- load images ----------
+    const load = s => { const i=new Image(); i.src=s; return i; };
+    const BG = {
+      beach:     load("beach.png"),
+      chiangmai: load("chiangmai.png"),
+      perth1:    load("perth01.png"),
+      perth2:    load("Perth02.png"),
+      victory:   load("victoryBG.png"),
+    };
+    const SPR = {
+      clement: load("clement.png"),
+      charles: load("charles.png"),
+      ning:    load("ning.png"),
+      charlie: load("charlie.png"),
+      car:     load("car.png"),
+    };
+
+    // sizes — car + Charlie slightly smaller
+    const SCALE = { clement:0.28, charles:0.28, ning:0.28, charlie:0.20, car:0.30 };
+    // offsets to place them nicely (tweak if needed)
+    const OFFSET = {
+      clement:{x:  0, y:  68},
+      charles:{x:+56, y:  68},
+      ning:   {x:+56, y:  68},
+      charlie:{x:+90, y:  68},
+      car:    {x:+5,  y: 128},
+    };
+
+    // ---------- story (poetic/cute with emojis) ----------
+    const STORY = [
+      {
+        bg:"beach",
+        who:["clement","charles"],
+        text:
+`2022 • Phuket & Koh Phangan 🏝️
+It all began with two French friends 🇫🇷.
+One of them had no idea what awaited him…
+on a little Thai island called Koh Phangan ✨`
+      },
+      {
+        bg:"beach",
+        who:["clement","ning","charlie"],
+        text:
+`Then we met — Ning & Charlie 🐶❤️
+Partners in crime he never expected:
+a clever Thai girl and a brown dog
+who followed like baby ducks 🦆`
+      },
+      {
+        bg:"beach",
+        who:["clement","ning","charlie"],
+        text:
+`Beach life together 🏖️
+Small apartment, giant hearts.
+“Big Mama” (Charlie’s crush) & Inès — our daily comedy duo 😂
+I miss those days so much.`
+      },
+      {
+        bg:"chiangmai",
+        who:["clement","ning","charlie"],
+        text:
+`Chiang Mai & Vietnam ✈️
+Mountains, markets, and mischief 🏔️🥢
+Chaotic? A little. Unforgettable? Absolutely.
+Best food of our lives! 🤤`
+      },
+      {
+        bg:"chiangmai",
+        who:["clement","ning"],
+        text:
+`Goodbye, Charlie 🐾
+The hardest page to turn.
+We carry you with us — always.`
+      },
+      {
+        bg:"perth1",
+        who:["clement","ning"],
+        text:
+`2023 • Storms we survived 🌧️⚡
+People doubted, but we didn’t.
+Through pain and tears, hand in hand,
+we kept choosing “us.” 💪`
+      },
+      {
+        bg:"beach",
+        who:["clement","ning"],
+        text:
+`23 May 2024 • Married in Thailand 💍
+Back where it all began — every memory sweeter.
+Mrs. Brayet now and forever. 🥂`
+      },
+      {
+        bg:"perth2",
+        who:["clement","ning","car"],
+        text:
+`2025 • Our first car 🚙✨
+Meet “Blanche” — French for “white.” 🤍
+She changed our little adventures.
+First road trip soon? Bags ready! 🧳`
+      },
+      {
+        bg:"victory",
+        who:["clement","ning","car"],
+        text:
+`28 Sep 2025 • Happy Birthday, mon amour 🎂🎉
+Thank you for riding this roller coaster with me.
+Nothing will change how much I love you
+or how much I believe in us. 💖
+
+Good things are coming — I feel it.
+One day it will be our day,
+and we’ll celebrate even bigger than now. ✨
+
+— Ning`
+      },
+    ];
+
+    // ---------- state ----------
+    const CAPTION = document.getElementById("caption");
+    const HUD = document.getElementById("hud");
+    const nextBtn = document.getElementById("nextBtn");
+    const prevBtn = document.getElementById("prevBtn");
+
+    let stage = 0, t = 0, scroll = 0, hearts = 0;
+    const AUTO_SECONDS = 30;  // how long each scene stays
+    let autoTimer = null;
+
+    // gentle heart particles (for ambiance + counter)
+    const heartPool = [];
+    function spawnHeart(){
+      const yBase = C.height*0.7 - Math.random()*120;
+      heartPool.push({
+        x: C.width + 30 + Math.random()*70,
+        y: yBase,
+        vy: -0.15 - Math.random()*0.2,
+        vx: -0.8 - Math.random()*0.6,
+        r: 8 + Math.random()*6,
+        a: 1,
+        caught: false
+      });
+    }
+    // spawn a few every second
+    setInterval(()=>{ for(let i=0;i<2;i++) spawnHeart(); }, 1200);
+
+    function setStage(i){
+      stage = Math.max(0, Math.min(STORY.length-1, i));
+      typeCaption(STORY[stage].text);
+      scroll = 0; t = 0;
+      clearInterval(autoTimer);
+      autoTimer = setInterval(()=> setStage(stage+1), AUTO_SECONDS*1000);
+      updateHUD();
+    }
+    function updateHUD(){
+      HUD.textContent = `Stage ${stage+1} / ${STORY.length} • Hearts ${hearts} • Auto ${AUTO_SECONDS}s • ←/→ or buttons`;
+    }
+
+    // ---------- typewriter caption ----------
+    function typeCaption(full){
+      CAPTION.textContent = "";
+      let i = 0;
+      clearInterval(typeCaption._t);
+      typeCaption._t = setInterval(()=>{
+        CAPTION.textContent = full.slice(0, i++);
+        if(i>full.length) clearInterval(typeCaption._t);
+      }, 28); // typing speed (ms per char)
+    }
+
+    // ---------- drawing helpers ----------
+    function drawTiledBG(img, speed=0.08){       // slower parallax
+      if(!img || !img.complete) return;
+      const W=C.width, H=C.height;
+      const scale = Math.max(W/img.width, H/img.height);
+      const w = img.width*scale, h = img.height*scale;
+      let startX = Math.floor(-((scroll*speed) % w));
+      for(let x=startX-w; x<W+w; x+=w) ctx.drawImage(img, x, 0, w, h);
+    }
+    const SCALE_MAP = {...SCALE}; // if you want to tweak live later
+    const OFFSET_MAP = {...OFFSET};
+
+    function drawSprite(name, x, baseY, i){
+      const img = SPR[name]; if(!img || !img.complete) return;
+      const s = SCALE_MAP[name] ?? 0.28;
+      const off = OFFSET_MAP[name] ?? {x:0,y:0};
+      const iw = img.width*s, ih = img.height*s;
+      const bob = Math.sin((t + i*9) * 0.08) * 2; // softer bob
+      ctx.drawImage(img, x - iw/2 + off.x, baseY - ih + bob + off.y, iw, ih);
+    }
+    function heartShape(x,y,s,alpha=1){
+      ctx.save();
+      ctx.translate(x,y);
+      ctx.scale(s/12, s/12);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = "#ff9ecb";
+      ctx.beginPath();
+      ctx.moveTo(0,4);
+      ctx.bezierCurveTo(0,-6,-10,-6,-10,2);
+      ctx.bezierCurveTo(-10,10,0,12,0,20);
+      ctx.bezierCurveTo(0,12,10,10,10,2);
+      ctx.bezierCurveTo(10,-6,0,-6,0,4);
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
+      ctx.globalAlpha = 1;
+    }
+
+    // ---------- main loop ----------
+    function loop(){
+      const W=C.width, H=C.height;
+      t++; scroll += 2; // gentle drift
+
+      // BG
+      drawTiledBG(BG[STORY[stage].bg], 0.08);
+
+      // characters (no physics; just vibe)
+      const who = STORY[stage].who;
+      const baseX = W*0.36;
+      const baseY = H*0.82;
+      const spacing = 90;
+      for(let i=0;i<who.length;i++){
+        drawSprite(who[i], baseX + i*spacing, baseY, i);
+      }
+
+      // floating hearts
+      for(const h of heartPool){
+        if(h.caught || h.a<=0) continue;
+        h.x += h.vx;
+        h.y += h.vy;
+        h.a -= 0.0028;
+        heartShape(h.x, h.y, h.r, Math.max(0,h.a));
+        // auto "collect" near characters
+        const pxCenter = baseX + (who.length-1)*spacing*0.5;
+        if(!h.caught && h.x < pxCenter+40 && h.x > pxCenter-120 && h.y > baseY-140 && h.y < baseY-20){
+          h.caught = true; hearts++; updateHUD();
+        }
+      }
+
+      requestAnimationFrame(loop);
+    }
+
+    // ---------- controls ----------
+    addEventListener("keydown",(e)=>{
+      if(e.key==="ArrowRight") setStage(stage+1);
+      if(e.key==="ArrowLeft")  setStage(stage-1);
+    });
+    nextBtn.addEventListener("click", ()=> setStage(stage+1));
+    prevBtn.addEventListener("click", ()=> setStage(stage-1));
+
+    // ---------- start ----------
+    setStage(0);
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
